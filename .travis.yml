@@ -1,0 +1,11 @@
+language: go
+
+go:
+    - "1.17"
+
+script:
+    - go test -race -covermode=atomic -coverprofile=cover.out
+
+after_success:
+    - cp cover.out coverage.txt
+    - bash <(curl -s https://codecov.io/bash)

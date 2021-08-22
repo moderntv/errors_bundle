@@ -66,6 +66,10 @@ func (b Bundle) Error() string {
 
 // Is returns true if any of the bundled errors is the target error - same as errors.Is
 func (b *Bundle) Is(target error) bool {
+	if b == nil {
+		return false
+	}
+
 	for _, err := range b.errors {
 		if errors.Is(err, target) {
 			return true
@@ -77,6 +81,10 @@ func (b *Bundle) Is(target error) bool {
 
 // As returns true if any of the bundled errors are the target error - same as errors.As
 func (b *Bundle) As(target interface{}) bool {
+	if b == nil {
+		return false
+	}
+
 	for _, err := range b.errors {
 		if errors.As(err, target) {
 			return true
