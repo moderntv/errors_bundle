@@ -15,37 +15,43 @@ func TestEvaluate(t *testing.T) {
 		bundle        *Bundle
 		appends       []error
 		wantErr       bool
+		wantErrsN     int
 		wantErrString string
 	}{
 		{
-			name:    "nil",
-			bundle:  New(),
-			wantErr: false,
+			name:      "nil",
+			bundle:    New(),
+			wantErr:   false,
+			wantErrsN: 0,
 		},
 		{
 			name:          "single error",
 			bundle:        New(errors.New("error1")),
 			wantErr:       true,
 			wantErrString: "error1",
+			wantErrsN:     1,
 		},
 		{
 			name:          "multiple errors",
 			bundle:        New(errors.New("error1"), errors.New("error2")),
 			wantErr:       true,
 			wantErrString: "error1 █ error2",
+			wantErrsN:     2,
 		},
 		{
-			name:    "empty with nil append",
-			bundle:  New(),
-			appends: []error{nil},
-			wantErr: false,
+			name:      "empty with nil append",
+			bundle:    New(),
+			appends:   []error{nil},
+			wantErr:   false,
+			wantErrsN: 0,
 		},
 		{
-			name:          "empty with errornous append",
+			name:          "empty with append",
 			bundle:        New(),
 			appends:       []error{errors.New("error1")},
 			wantErr:       true,
 			wantErrString: "error1",
+			wantErrsN:     1,
 		},
 		{
 			name:          "empty with bundle append",
@@ -53,6 +59,15 @@ func TestEvaluate(t *testing.T) {
 			appends:       []error{New(errors.New("foobar"))},
 			wantErr:       true,
 			wantErrString: "foobar",
+			wantErrsN:     1,
+		},
+		{
+			name:          "complex bundle append",
+			bundle:        New(errors.New("foo"), errors.New("bar")),
+			appends:       []error{New(errors.New("fizz"), errors.New("buzz")), New(errors.New("lorem"), errors.New("ipsum"))},
+			wantErr:       true,
+			wantErrString: "foo █ bar █ fizz █ buzz █ lorem █ ipsum",
+			wantErrsN:     6,
 		},
 		{
 			name:          "append itself",
@@ -60,6 +75,7 @@ func TestEvaluate(t *testing.T) {
 			appends:       []error{b},
 			wantErr:       true,
 			wantErrString: "error1",
+			wantErrsN:     1,
 		},
 	}
 	for _, tt := range tests {
@@ -71,6 +87,10 @@ func TestEvaluate(t *testing.T) {
 			err := tt.bundle.Evaluate()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("errorsBundle.Evaluate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if n := len(tt.bundle.Errors()); n != tt.wantErrsN {
+				t.Errorf("len(errorsBundle.Errors()) = %v, want = %v", n, tt.wantErrsN)
 			}
 
 			if got := tt.bundle.Error(); !reflect.DeepEqual(got, tt.wantErrString) {
